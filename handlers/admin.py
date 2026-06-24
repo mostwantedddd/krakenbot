@@ -1,30 +1,35 @@
-ADMIN_ID = 8954020327
-
+print("🔥 comando cargado")
 from database import agregar_creditos
 
-def registrar_start(bot):   
+ADMIN_ID = 8954020327
 
-@bot.message_handler(commands=['addcredits'])
-def add_credits(message):
-    print("🔥 comando recibido")
+def registrar_admin(bot):
 
-    if message.from_user.id != ADMIN_ID:
-        bot.send_message(message.chat.id, "❌ No tienes permisos.")
-        return
+    @bot.message_handler(commands=['addcredits'])
+    def add_credits(message):
+        print("🔥 comando recibido")
 
-    try:
-        parts = message.text.split()
-        if len(parts) != 3:
-            bot.send_message(message.chat.id, "❌ Uso: /addcredits <id> <cantidad>")
+        if message.from_user.id != ADMIN_ID:
+            bot.send_message(message.chat.id, "❌ No tienes permisos.")
             return
 
-        user_id = int(parts[1])
-        amount = int(parts[2])
+        try:
+            parts = message.text.split()
 
-        agregar_creditos(user_id, amount)
+            if len(parts) != 3:
+                bot.send_message(message.chat.id, "❌ Uso: /addcredits <id> <cantidad>")
+                return
 
-        bot.send_message(message.chat.id, f"✅ Se agregaron {amount} créditos a {user_id}")
+            user_id = int(parts[1])
+            amount = int(parts[2])
 
-    except Exception as e:
-        print("ERROR:", e)
-        bot.send_message(message.chat.id, "❌ Error interno")
+            agregar_creditos(user_id, amount)
+
+            bot.send_message(
+                message.chat.id,
+                f"✅ Se agregaron {amount} créditos a {user_id}"
+            )
+
+        except Exception as e:
+            print("ERROR:", e)
+            bot.send_message(message.chat.id, "❌ Error interno")
