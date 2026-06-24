@@ -1,6 +1,7 @@
 import re
 import time
 import threading
+import random
 from database import obtener_creditos, descontar_creditos
 
 def registrar_ventas(bot):
@@ -26,12 +27,28 @@ def registrar_ventas(bot):
         descontar_creditos(user_id, creditos_a_cobrar)
         return True
 
+    # Función para generar un ticket con todos los datos
+    def generar_ticket(user_id, tipo, datos_servicio, monto, creditos_usados, estado_pago="✅ Completado"):
+        folio = f"TX-{int(time.time())}-{random.randint(1000,9999)}"
+        fecha_hora = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        lineas = [
+            f"🎫 *Ticket de compra*",
+            f"📌 Folio: `{folio}`",
+            f"📅 Fecha: {fecha_hora}",
+            f"👤 Usuario ID: `{user_id}`",
+            f"📦 Servicio: {tipo}",
+            f"📋 Datos: {datos_servicio}",
+            f"💰 Monto: ${monto:.2f}",
+            f"💸 Créditos usados: {creditos_usados}",
+            f"📌 Estado: {estado_pago}"
+        ]
+        return "\n".join(lineas)
+
     # =========================
     # RECARGAS
     # =========================
     @bot.message_handler(func=lambda m: m.text == "📱 Recargas")
     def recargas(message):
-        # Si ya hay un proceso activo, mostrar tiempo restante y salir
         if message.chat.id in estados and estados[message.chat.id].get("estado") == "procesando":
             inicio = estados[message.chat.id]["inicio"]
             ahora = time.time()
@@ -139,7 +156,6 @@ def registrar_ventas(bot):
                     f"⏳ Aún procesando...\n⏱ Espera {restante} segundos"
                 )
             else:
-                # Si ya pasaron los 60s y el Timer no limpió, forzamos limpieza
                 bot.send_message(message.chat.id, "✅ El pago ya debería haberse completado. Intenta de nuevo.")
                 estados.pop(message.chat.id, None)
             return
@@ -188,7 +204,8 @@ def registrar_ventas(bot):
                     bot.send_message(message.chat.id, "❌ Monto inválido")
                     return
 
-                # Guardar estado de procesamiento y lanzar Timer
+                creditos_a_usar = max(1, int(monto/2))
+
                 estados[message.chat.id] = {
                     "estado": "procesando",
                     "inicio": time.time(),
@@ -196,27 +213,29 @@ def registrar_ventas(bot):
                     "monto": monto,
                     "tipo": "monto_recarga",
                     "compania": estado["compania"],
-                    "numero": estado["numero"]
+                    "numero": estado["numero"],
+                    "creditos_a_usar": creditos_a_usar
                 }
 
-                def procesar_recarga(chat_id, user_id, monto, compania, numero):
+                def procesar_recarga(chat_id, user_id, monto, compania, numero, creditos_usados):
                     if not cobrar_creditos_por_monto(user_id, chat_id, monto):
                         estados.pop(chat_id, None)
                         return
                     creditos_restantes = obtener_creditos(user_id)
-                    bot.send_message(
-                        chat_id,
-                        f"✅ Recarga exitosa . . . . OK\n\n"
-                        f"📱 {compania}\n"
-                        f"💵 ${monto:.2f}\n"
-                        f"💸 Créditos: {max(1, int(monto/2))}\n"
-                        f"💰 Restantes: {creditos_restantes}"
+                    ticket = generar_ticket(
+                        user_id=user_id,
+                        tipo="📱 Recarga",
+                        datos_servicio=f"{compania} - {numero}",
+                        monto=monto,
+                        creditos_usados=creditos_usados
                     )
+                    mensaje = f"✅ Recarga exitosa\n\n{ticket}\n\n💰 Créditos restantes: {creditos_restantes}"
+                    bot.send_message(chat_id, mensaje)
                     estados.pop(chat_id, None)
 
                 threading.Timer(60.0, procesar_recarga,
                                 args=(message.chat.id, message.from_user.id, monto,
-                                      estado["compania"], estado["numero"])).start()
+                                      estado["compania"], estado["numero"], creditos_a_usar)).start()
 
                 bot.send_message(message.chat.id, "⏳ Pago en proceso... espera 60 segundos")
 
@@ -232,7 +251,8 @@ def registrar_ventas(bot):
                 bot.send_message(message.chat.id, "❌ Contrato inválido")
                 return
             estados[message.chat.id] = {
-                "estado": "monto_megacable"
+                "estado": "monto_megacable",
+                "contrato": contrato
             }
             bot.send_message(message.chat.id, "💰 Envía el monto")
 
@@ -246,29 +266,38 @@ def registrar_ventas(bot):
                     bot.send_message(message.chat.id, "❌ Monto inválido")
                     return
 
+                creditos_a_usar = max(1, int(monto/2))
+                contrato = estado.get("contrato", "N/A")
+
                 estados[message.chat.id] = {
                     "estado": "procesando",
                     "inicio": time.time(),
                     "user_id": message.from_user.id,
                     "monto": monto,
                     "tipo": "monto_megacable",
-                    "contrato": contrato if 'contrato' in estado else "N/A"
+                    "contrato": contrato,
+                    "creditos_a_usar": creditos_a_usar
                 }
 
-                def procesar_megacable(chat_id, user_id, monto):
+                def procesar_megacable(chat_id, user_id, monto, contrato, creditos_usados):
                     if not cobrar_creditos_por_monto(user_id, chat_id, monto):
                         estados.pop(chat_id, None)
                         return
-                    bot.send_message(
-                        chat_id,
-                        f"✅ Megacable procesado\n\n"
-                        f"💵 ${monto:.2f}\n"
-                        f"💸 Créditos cobrados: {max(1, int(monto/2))}"
+                    creditos_restantes = obtener_creditos(user_id)
+                    ticket = generar_ticket(
+                        user_id=user_id,
+                        tipo="📺 Megacable",
+                        datos_servicio=f"Contrato: {contrato}",
+                        monto=monto,
+                        creditos_usados=creditos_usados
                     )
+                    mensaje = f"✅ Megacable procesado\n\n{ticket}\n\n💰 Créditos restantes: {creditos_restantes}"
+                    bot.send_message(chat_id, mensaje)
                     estados.pop(chat_id, None)
 
                 threading.Timer(60.0, procesar_megacable,
-                                args=(message.chat.id, message.from_user.id, monto)).start()
+                                args=(message.chat.id, message.from_user.id, monto,
+                                      contrato, creditos_a_usar)).start()
 
                 bot.send_message(message.chat.id, "⏳ Pago en proceso... espera 60 segundos")
 
@@ -276,7 +305,7 @@ def registrar_ventas(bot):
                 bot.send_message(message.chat.id, "❌ Monto inválido")
 
         # -------------------------
-        # INTERNET → MONTO (flujo completo internet no estaba en el original, lo agrego para que sea consistente)
+        # INTERNET → MONTO
         # -------------------------
         elif estado["estado"] == "internet":
             servicio = message.text.strip()
@@ -296,32 +325,40 @@ def registrar_ventas(bot):
                     bot.send_message(message.chat.id, "❌ Monto inválido")
                     return
 
+                creditos_a_usar = max(1, int(monto/2))
+                servicio = estado["servicio"]
+
                 estados[message.chat.id] = {
                     "estado": "procesando",
                     "inicio": time.time(),
                     "user_id": message.from_user.id,
                     "monto": monto,
                     "tipo": "monto_internet",
-                    "servicio": estado["servicio"]
+                    "servicio": servicio,
+                    "creditos_a_usar": creditos_a_usar
                 }
 
-                def procesar_internet(chat_id, user_id, monto, servicio):
+                def procesar_internet(chat_id, user_id, monto, servicio, creditos_usados):
                     if not cobrar_creditos_por_monto(user_id, chat_id, monto):
                         estados.pop(chat_id, None)
                         return
-                    bot.send_message(
-                        chat_id,
-                        f"✅ Internet procesado\n\n"
-                        f"🌐 Servicio: {servicio}\n"
-                        f"💵 ${monto:.2f}\n"
-                        f"💸 Créditos cobrados: {max(1, int(monto/2))}"
+                    creditos_restantes = obtener_creditos(user_id)
+                    ticket = generar_ticket(
+                        user_id=user_id,
+                        tipo="🌐 Internet",
+                        datos_servicio=f"Servicio: {servicio}",
+                        monto=monto,
+                        creditos_usados=creditos_usados
                     )
+                    mensaje = f"✅ Internet procesado\n\n{ticket}\n\n💰 Créditos restantes: {creditos_restantes}"
+                    bot.send_message(chat_id, mensaje)
                     estados.pop(chat_id, None)
 
                 threading.Timer(60.0, procesar_internet,
-                                args=(message.chat.id, message.from_user.id, monto, estado["servicio"])).start()
+                                args=(message.chat.id, message.from_user.id, monto,
+                                      servicio, creditos_a_usar)).start()
 
                 bot.send_message(message.chat.id, "⏳ Pago en proceso... espera 60 segundos")
 
             except ValueError:
-                bot.send_message(message.chat.id, "❌ Monto inválido")
+                bot.send_message(message.chat.id, "❌ Monto inválido")                     
