@@ -1,64 +1,55 @@
 import os
-import sqlite3
 import psycopg2
-from urllib.parse import urlparse
 
-DATABASE_URL = os.getenv('DATABASE_URL')
+conn = psycopg2.connect(
+    os.getenv("DATABASE_URL"),
+    sslmode="require"
+)
 
-if DATABASE_URL:
-    # Modo Railway (PostgreSQL)
-    result = urlparse(DATABASE_URL)
-    conn = psycopg2.connect(
-        database=result.path[1:],
-        user=result.username,
-        password=result.password,
-        host=result.hostname,
-        port=result.port
-    )
-else:
-    # Modo local (SQLite)
-    conn = sqlite3.connect("bot.db", check_same_thread=False)
+# 🔹 Crear usuario si no existe
+def crear_usuario(user_id):
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO users (user_id, credits)
+        VALUES (%s, 0)
+        ON CONFLICT (user_id) DO NOTHING;
+    """, (user_id,))
+    conn.commit()
+    cur.close()
 
-cursor = conn.cursor()
-
-# Crear tabla en la base de datos que usemos
-cursor.execute("CREATE TABLE IF NOT EXISTS usuarios (user_id BIGINT PRIMARY KEY, creditos INTEGER DEFAULT 0)")
-conn.commit()
-
+# 🔹 Obtener créditos
 def obtener_creditos(user_id):
-    if DATABASE_URL:
-        cursor.execute("SELECT creditos FROM usuarios WHERE user_id = %s", (user_id,))
-    else:
-        cursor.execute("SELECT creditos FROM usuarios WHERE user_id = ?", (user_id,))
-        
-    fila = cursor.fetchone()
-    if fila:
-        return fila[0]
-    
-    # Crear usuario si no existe
-    if DATABASE_URL:
-        cursor.execute("INSERT INTO usuarios (user_id, creditos) VALUES (%s, 0) ON CONFLICT (user_id) DO NOTHING", (user_id,))
-    else:
-        cursor.execute("INSERT OR IGNORE INTO usuarios (user_id, creditos) VALUES (?, 0)", (user_id,))
-        
-    conn.commit()
-    return 0
+    crear_usuario(user_id)
 
-def agregar_creditos(user_id, cantidad):
-    # Insertar o ignorar si ya existe
-    if DATABASE_URL:
-        cursor.execute("INSERT INTO usuarios (user_id, creditos) VALUES (%s, 0) ON CONFLICT (user_id) DO NOTHING", (user_id,))
-        cursor.execute("UPDATE usuarios SET creditos = creditos + %s WHERE user_id = %s", (cantidad, user_id))
-    else:
-        cursor.execute("INSERT OR IGNORE INTO usuarios (user_id, creditos) VALUES (?, 0)", (user_id,))
-        cursor.execute("UPDATE usuarios SET creditos = creditos + ? WHERE user_id = ?", (cantidad, user_id))
-        
-    conn.commit()
+    cur = conn.cursor()
+    cur.execute("SELECT credits FROM users WHERE user_id = %s", (user_id,))
+    data = cur.fetchone()
+    cur.close()
 
-def descontar_credito(user_id):
-    if DATABASE_URL:
-        cursor.execute("UPDATE usuarios SET creditos = creditos - 1 WHERE user_id = %s", (user_id,))
-    else:
-        cursor.execute("UPDATE usuarios SET creditos = creditos - 1 WHERE user_id = ?", (user_id,))
-        
+    return data[0] if data else 0
+
+# 🔹 Agregar créditos (RECARGA)
+def agregar_creditos(user_id, amount):
+    crear_usuario(user_id)
+
+    cur = conn.cursor()
+    cur.execute("""
+        UPDATE users
+        SET credits = credits + %s
+        WHERE user_id = %s;
+    """, (amount, user_id))
     conn.commit()
+    cur.close()
+
+# 🔹 Descontar crédito (USO)
+def descontar_credito(user_id, amount=1):
+    crear_usuario(user_id)
+
+    cur = conn.cursor()
+    cur.execute("""
+        UPDATE users
+        SET credits = credits - %s
+        WHERE user_id = %s AND credits >= %s;
+    """, (amount, user_id, amount))
+    conn.commit()
+    cur.close()
