@@ -206,7 +206,7 @@ def registrar_ventas(bot):
                     creditos_restantes = obtener_creditos(user_id)
                     bot.send_message(
                         chat_id,
-                        f"✅ Recarga exitosa\n\n"
+                        f"✅ Recarga exitosa . . . . OK\n\n"
                         f"📱 {compania}\n"
                         f"💵 ${monto:.2f}\n"
                         f"💸 Créditos: {max(1, int(monto/2))}\n"
