@@ -6,6 +6,11 @@ from handlers.admins import registrar_admin
 
 bot = telebot.TeleBot(TOKEN)
 
+# COMANDO DE PRUEBA PARA SABER SI EL BOT ESTÁ VIVO
+@bot.message_handler(commands=['test'])
+def test_command(message):
+    bot.send_message(message.chat.id, "✅ ¡El bot está funcionando en Railway!")
+
 print("🚀 Iniciando módulos del bot...")
 registrar_start(bot)
 registrar_ventas(bot)
