@@ -150,14 +150,13 @@ def registrar_ventas(bot):
         # -------------------------
         elif estado["estado"] == "monto_recarga":
 
-        try:
-        monto = float(message.text)
+          try:
+              monto = float(message.text)
 
         if monto <= 0:
             bot.send_message(message.chat.id, "❌ Monto inválido")
             return
 
-        # ⏳ INICIO DEL TIMER
         estados[message.chat.id]["inicio"] = time.time()
 
         bot.send_message(
@@ -177,7 +176,6 @@ def registrar_ventas(bot):
             )
             return
 
-        # 💳 COBRO DESPUÉS DEL TIEMPO
         if not cobrar_creditos_por_monto(message, monto):
             estados.pop(message.chat.id)
             return
@@ -195,7 +193,7 @@ def registrar_ventas(bot):
 
         estados.pop(message.chat.id)
 
-    except ValueError:
+        except ValueError:
         bot.send_message(message.chat.id, "❌ Monto inválido")
             
         # -------------------------
@@ -221,7 +219,7 @@ def registrar_ventas(bot):
         elif estado["estado"] == "monto_megacable":
 
         try:
-        monto = float(message.text)
+            monto = float(message.text)
 
         if monto <= 0:
             bot.send_message(message.chat.id, "❌ Monto inválido")
