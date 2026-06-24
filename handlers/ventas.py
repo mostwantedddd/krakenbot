@@ -6,6 +6,33 @@ def registrar_ventas(bot):
     estados = {}
 
     # -------------------------
+    # FUNCIÓN PARA COBRAR CRÉDITOS
+    # -------------------------
+    def cobrar_creditos_por_monto(message, monto):
+
+        creditos_a_cobrar = max(1, int(monto / 2))
+
+        creditos_actuales = obtener_creditos(message.from_user.id)
+
+        if creditos_actuales < creditos_a_cobrar:
+
+            bot.send_message(
+                message.chat.id,
+                f"❌ Créditos insuficientes.\n\n"
+                f"Necesitas: {creditos_a_cobrar}\n"
+                f"Tienes: {creditos_actuales}"
+            )
+
+            return False
+
+        descontar_creditos(
+            message.from_user.id,
+            creditos_a_cobrar
+        )
+
+        return True
+
+    # -------------------------
     # RECARGAS
     # -------------------------
     @bot.message_handler(func=lambda m: m.text == "📱 Recargas")
@@ -75,7 +102,7 @@ def registrar_ventas(bot):
         )
 
     # -------------------------
-    # CAPTURA DE MENSAJES (FIX IMPORTANTE)
+    # CAPTURA DE MENSAJES
     # -------------------------
     @bot.message_handler(func=lambda m: m.chat.id in estados)
     def capturar(message):
@@ -83,7 +110,7 @@ def registrar_ventas(bot):
         estado = estados.get(message.chat.id)
 
         # -------------------------
-        # RECARGA FLUJO
+        # RECARGA: PEDIR NÚMERO
         # -------------------------
         if estado == "recarga":
 
@@ -97,65 +124,55 @@ def registrar_ventas(bot):
                     message.chat.id,
                     f"✅ Número detectado: {numero}\n\nAhora envía el monto."
                 )
+
             else:
-                bot.send_message(message.chat.id, "❌ Debe tener 10 dígitos.")
+                bot.send_message(
+                    message.chat.id,
+                    "❌ Debe tener 10 dígitos."
+                )
 
         # -------------------------
-        # MONTO RECARGA
+        # RECARGA: PEDIR MONTO
         # -------------------------
         elif estado == "monto_recarga":
 
-    try:
-        monto = float(message.text)
+            try:
 
-        if monto <= 0:
-            bot.send_message(message.chat.id, "❌ Monto inválido")
-            return
+                monto = float(message.text)
 
-        # Cobra la mitad del monto en créditos
-        creditos_a_cobrar = int(monto / 2)
+                if monto <= 0:
+                    bot.send_message(
+                        message.chat.id,
+                        "❌ Monto inválido"
+                    )
+                    return
 
-        if creditos_a_cobrar < 1:
-            creditos_a_cobrar = 1
+                if not cobrar_creditos_por_monto(message, monto):
+                    estados.pop(message.chat.id, None)
+                    return
 
-        creditos_actuales = obtener_creditos(message.from_user.id)
+                creditos_restantes = obtener_creditos(
+                    message.from_user.id
+                )
 
-        if creditos_actuales < creditos_a_cobrar:
+                bot.send_message(
+                    message.chat.id,
+                    f"✅ Recarga procesada\n\n"
+                    f"💵 Monto: ${monto:.2f}\n"
+                    f"💸 Créditos cobrados: {max(1, int(monto / 2))}\n"
+                    f"💰 Créditos restantes: {creditos_restantes}"
+                )
 
-            bot.send_message(
-                message.chat.id,
-                f"❌ Créditos insuficientes.\n\n"
-                f"Necesitas: {creditos_a_cobrar} créditos\n"
-                f"Tienes: {creditos_actuales} créditos"
-            )
+                estados.pop(message.chat.id)
 
-            estados.pop(message.chat.id)
-            return
+            except ValueError:
+                bot.send_message(
+                    message.chat.id,
+                    "❌ Envía un monto válido"
+                )
 
-        descontar_creditos(
-            message.from_user.id,
-            creditos_a_cobrar
-        )
-
-        creditos_restantes = obtener_creditos(message.from_user.id)
-
-        bot.send_message(
-            message.chat.id,
-            f"✅ Recarga procesada\n"
-            f"💵 Monto: ${monto:.2f}\n"
-            f"💸 Créditos cobrados: {creditos_a_cobrar}\n"
-            f"💰 Créditos restantes: {creditos_restantes}"
-        )
-
-        estados.pop(message.chat.id)
-
-    except ValueError:
-        bot.send_message(
-            message.chat.id,
-            "❌ Envía un monto válido"
-        )
         # -------------------------
-        # MEGACABLE
+        # MEGACABLE: PEDIR CONTRATO
         # -------------------------
         elif estado == "megacable":
 
@@ -163,22 +180,62 @@ def registrar_ventas(bot):
 
             if len(contrato) >= 6:
 
-                descontar_credito(message.from_user.id)
-                creditos_restantes = obtener_creditos(message.from_user.id)
+                estados[message.chat.id] = "monto_megacable"
 
                 bot.send_message(
                     message.chat.id,
-                    f"✅ Contrato detectado:\n{contrato}\n\n"
-                    f"💳 Créditos restantes: {creditos_restantes}"
+                    f"✅ Contrato detectado: {contrato}\n\n"
+                    "Ahora envía el monto a pagar."
+                )
+
+            else:
+                bot.send_message(
+                    message.chat.id,
+                    "❌ Contrato inválido"
+                )
+
+        # -------------------------
+        # MEGACABLE: PEDIR MONTO
+        # -------------------------
+        elif estado == "monto_megacable":
+
+            try:
+
+                monto = float(message.text)
+
+                if monto <= 0:
+                    bot.send_message(
+                        message.chat.id,
+                        "❌ Monto inválido"
+                    )
+                    return
+
+                if not cobrar_creditos_por_monto(message, monto):
+                    estados.pop(message.chat.id, None)
+                    return
+
+                creditos_restantes = obtener_creditos(
+                    message.from_user.id
+                )
+
+                bot.send_message(
+                    message.chat.id,
+                    f"✅ Pago Megacable procesado\n\n"
+                    f"💵 Monto: ${monto:.2f}\n"
+                    f"💸 Créditos cobrados: {max(1, int(monto / 2))}\n"
+                    f"💰 Créditos restantes: {creditos_restantes}"
                 )
 
                 estados.pop(message.chat.id)
 
-            else:
-                bot.send_message(message.chat.id, "❌ Contrato inválido")
+            except ValueError:
+                bot.send_message(
+                    message.chat.id,
+                    "❌ Envía un monto válido"
+                )
 
         # -------------------------
-        # INTERNET
+        # INTERNET: PEDIR SERVICIO
         # -------------------------
         elif estado == "internet":
 
@@ -186,16 +243,56 @@ def registrar_ventas(bot):
 
             if len(servicio) >= 6:
 
-                descontar_credito(message.from_user.id)
-                creditos_restantes = obtener_creditos(message.from_user.id)
+                estados[message.chat.id] = "monto_internet"
 
                 bot.send_message(
                     message.chat.id,
-                    f"✅ Servicio detectado:\n{servicio}\n\n"
-                    f"💳 Créditos restantes: {creditos_restantes}"
+                    f"✅ Servicio detectado: {servicio}\n\n"
+                    "Ahora envía el monto a pagar."
+                )
+
+            else:
+                bot.send_message(
+                    message.chat.id,
+                    "❌ Número inválido"
+                )
+
+        # -------------------------
+        # INTERNET: PEDIR MONTO
+        # -------------------------
+        elif estado == "monto_internet":
+
+            try:
+
+                monto = float(message.text)
+
+                if monto <= 0:
+                    bot.send_message(
+                        message.chat.id,
+                        "❌ Monto inválido"
+                    )
+                    return
+
+                if not cobrar_creditos_por_monto(message, monto):
+                    estados.pop(message.chat.id, None)
+                    return
+
+                creditos_restantes = obtener_creditos(
+                    message.from_user.id
+                )
+
+                bot.send_message(
+                    message.chat.id,
+                    f"✅ Pago Internet procesado\n\n"
+                    f"💵 Monto: ${monto:.2f}\n"
+                    f"💸 Créditos cobrados: {max(1, int(monto / 2))}\n"
+                    f"💰 Créditos restantes: {creditos_restantes}"
                 )
 
                 estados.pop(message.chat.id)
 
-            else:
-                bot.send_message(message.chat.id, "❌ Número inválido")
+            except ValueError:
+                bot.send_message(
+                    message.chat.id,
+                    "❌ Envía un monto válido"
+                )
