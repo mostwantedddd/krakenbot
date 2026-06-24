@@ -2,6 +2,8 @@ ADMIN_ID = 8954020327
 
 from database import agregar_creditos
 
+def registrar_start(bot):   
+
 @bot.message_handler(commands=['addcredits'])
 def add_credits(message):
     print("🔥 comando recibido")
