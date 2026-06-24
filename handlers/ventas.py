@@ -217,4 +217,4 @@ def registrar_ventas(bot):
                 estados.pop(message.chat.id)
 
             except ValueError:
-                bot.send_message(message.chat.id, "
+                bot.send_message(message.chat.id, "❌ Monto inválido")
