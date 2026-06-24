@@ -4,22 +4,22 @@ import psycopg2
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Si no encuentra la variable, el bot se detiene y te muestra el error en los Logs
 if not DATABASE_URL:
-    print("❌ ERROR GRAVE: No se encontró la variable DATABASE_URL en Railway.", file=sys.stderr)
+    print("❌ ERROR: Variable DATABASE_URL no encontrada en Railway.", file=sys.stderr)
     sys.exit(1)
 
 try:
-    # Conexión directa a PostgreSQL (no necesitas ni sqlite, ni urlparse)
+    # auto commit = True hace que los cambios se guarden solos, sin errores
     conn = psycopg2.connect(DATABASE_URL, sslmode="require")
+    conn.autocommit = True
     print("✅ [LOG] Conectado exitosamente a PostgreSQL.", file=sys.stderr)
 except Exception as e:
-    print(f"❌ [LOG] ERROR GRAVE conectando a PostgreSQL: {e}", file=sys.stderr)
+    print(f"❌ [LOG] Error conectando a PostgreSQL: {e}", file=sys.stderr)
     sys.exit(1)
 
 cursor = conn.cursor()
 
-# Crear la tabla usando los mismos nombres de tu versión anterior
+# Crear la tabla (PostgreSQL usa ON CONFLICT, no INSERT OR IGNORE)
 cursor.execute("CREATE TABLE IF NOT EXISTS usuarios (user_id BIGINT PRIMARY KEY, creditos INTEGER DEFAULT 0)")
 conn.commit()
 
