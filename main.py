@@ -10,7 +10,7 @@ bot = telebot.TeleBot(TOKEN)
 print("🚀 Iniciando bot...")
 
 # -------------------------
-# IMPORTANTE: evitar conflictos webhook
+# EVITAR CONFLICTOS WEBHOOK
 # -------------------------
 try:
     bot.remove_webhook()
@@ -49,15 +49,18 @@ registrar_admin(bot)
 print("✅ Módulos cargados correctamente")
 
 # -------------------------
-# INICIO POLLING SEGURO
+# INICIO BOT SEGURO
 # -------------------------
 if __name__ == "__main__":
     print("🤖 Bot iniciado y escuchando mensajes...")
 
     while True:
         try:
-            print("🤖 Bot iniciado y escuchando mensajes...")
-            # infinity_polling maneja mejor los errores de conexión que polling normal
-            bot.infinity_polling(skip_pending=True)
+            bot.infinity_polling(
+                skip_pending=True,
+                timeout=10,
+                long_polling_timeout=10
+            )
         except Exception as e:
-            print(f"❌ Error capturado: {e}")        
+            print(f"❌ Error capturado: {e}")
+            print("🔄 Reiniciando bot en 3 segundos...")
