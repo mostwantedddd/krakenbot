@@ -1,6 +1,6 @@
 ADMIN_ID = 8954020327
 
-def registrar_admin(bot)
+def registrar_admin(bot):
 
 @bot.message_handler(commands=['add'])
 def add_credits(message):
