@@ -41,3 +41,10 @@ def agregar_creditos(user_id, cantidad):
 def descontar_credito(user_id):
     cursor.execute("UPDATE usuarios SET creditos = creditos - 1 WHERE user_id = %s AND creditos > 0", (user_id,))
     conn.commit()
+
+def descontar_creditos(user_id, cantidad):
+    cursor.execute(
+        "UPDATE usuarios SET creditos = creditos - %s WHERE user_id = %s AND creditos >= %s",
+        (cantidad, user_id, cantidad)
+    )
+    conn.commit()
