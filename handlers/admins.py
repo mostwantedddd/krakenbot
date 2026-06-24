@@ -1,5 +1,7 @@
 ADMIN_ID = 8954020327
 
+def registrar_start(bot)
+
 @bot.message_handler(commands=['add'])
 def add_credits(message):
     if message.from_user.id != ADMIN_ID:
