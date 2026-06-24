@@ -156,16 +156,28 @@ def registrar_ventas(bot):
                     bot.send_message(message.chat.id, "❌ Monto inválido")
                     return
 
-                cargando = bot.send_message(
+                estados[message.chat.id]["inicio"] = time.time()
+
+                bot.send_message(
                 message.chat.id,
-                "⏳ Procesando pago..."
+                "⏳ Pago en proceso... espera 60 segundos"
                 )
-
-                time.sleep(5)
-
                 if not cobrar_creditos_por_monto(message, monto):
                     estados.pop(message.chat.id)
                     return
+
+                tiempo_actual = time.time()
+                inicio = estado.get("inicio", tiempo_actual)
+
+                if tiempo_actual - inicio < 60:
+                restante = int(60 - (tiempo_actual - inicio))
+
+                bot.send_message(
+                message.chat.id,
+                f"⏳ Aún procesando...\n"
+                f"⏱ Espera {restante} segundos"
+                )
+                return
 
                 creditos_restantes = obtener_creditos(message.from_user.id)
 
