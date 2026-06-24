@@ -17,4 +17,8 @@ registrar_ventas(bot)
 registrar_admin(bot)
 
 print("Bot iniciado...")
-bot.infinity_polling(skip_pending=True)
+try:
+    # Non_stop=True evita que el bot se caiga por errores de red pequeños
+    bot.polling(non_stop=True, skip_pending=True)
+except Exception as e:
+    print(f"❌ ERROR FATAL: El bot se ha caído por: {e}")
