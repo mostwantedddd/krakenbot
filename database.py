@@ -15,7 +15,8 @@ try:
     print("✅ [LOG] Conectado exitosamente a PostgreSQL.", file=sys.stderr)
 except Exception as e:
     print(f"❌ [LOG] Error conectando a PostgreSQL: {e}", file=sys.stderr)
-    sys.exit(1)
+    conn = None
+    cursor = None
 
 cursor = conn.cursor()
 
