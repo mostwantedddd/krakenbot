@@ -60,6 +60,4 @@ if __name__ == "__main__":
             # infinity_polling maneja mejor los errores de conexión que polling normal
             bot.infinity_polling(skip_pending=True)
         except Exception as e:
-            print(f"❌ Error capturado: {e}")
-            print("🔄 Reintentando conectar en 5 segundos...")
-            time.sleep(5)
+            print(f"❌ Error capturado: {e}")        
