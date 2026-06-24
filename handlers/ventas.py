@@ -105,28 +105,55 @@ def registrar_ventas(bot):
         # -------------------------
         elif estado == "monto_recarga":
 
-            try:
-                monto = float(message.text)
+    try:
+        monto = float(message.text)
 
-                if monto <= 0:
-                    bot.send_message(message.chat.id, "❌ Monto inválido")
-                    return
+        if monto <= 0:
+            bot.send_message(message.chat.id, "❌ Monto inválido")
+            return
 
-                descontar_credito(message.from_user.id)
-                creditos_restantes = obtener_creditos(message.from_user.id)
+        # Cobra la mitad del monto en créditos
+        creditos_a_cobrar = int(monto / 2)
 
-                bot.send_message(
-                    message.chat.id,
-                    f"✅ Recarga procesada\n"
-                    f"Monto: ${monto:.2f}\n\n"
-                    f"💳 Créditos restantes: {creditos_restantes}"
-                )
+        if creditos_a_cobrar < 1:
+            creditos_a_cobrar = 1
 
-                estados.pop(message.chat.id)
+        creditos_actuales = obtener_creditos(message.from_user.id)
 
-            except ValueError:
-                bot.send_message(message.chat.id, "❌ Envía un monto válido")
+        if creditos_actuales < creditos_a_cobrar:
 
+            bot.send_message(
+                message.chat.id,
+                f"❌ Créditos insuficientes.\n\n"
+                f"Necesitas: {creditos_a_cobrar} créditos\n"
+                f"Tienes: {creditos_actuales} créditos"
+            )
+
+            estados.pop(message.chat.id)
+            return
+
+        descontar_creditos(
+            message.from_user.id,
+            creditos_a_cobrar
+        )
+
+        creditos_restantes = obtener_creditos(message.from_user.id)
+
+        bot.send_message(
+            message.chat.id,
+            f"✅ Recarga procesada\n"
+            f"💵 Monto: ${monto:.2f}\n"
+            f"💸 Créditos cobrados: {creditos_a_cobrar}\n"
+            f"💰 Créditos restantes: {creditos_restantes}"
+        )
+
+        estados.pop(message.chat.id)
+
+    except ValueError:
+        bot.send_message(
+            message.chat.id,
+            "❌ Envía un monto válido"
+        )
         # -------------------------
         # MEGACABLE
         # -------------------------
