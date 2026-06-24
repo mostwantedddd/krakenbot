@@ -1,71 +1,42 @@
 import os
+import sys
 import psycopg2
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-if DATABASE_URL:
-  print("✅ [LOG] Conectado exitosamente a PostgreSQL.", file=sys.stderr)
-    except Exception as e:
-        print(f"❌ [LOG] ERROR GRAVE conectando a PostgreSQL: {e}", file=sys.stderr)
-        # Forzamos el cierre para que veas el error en rojo en los logs
-        sys.exit(1)
-else:
-    # Si no encuentra DATABASE_URL, usa SQLite (Esto es el enemigo de los créditos)
-    print("⚠️ [LOG] ATENCIÓN: Usando SQLite EFÍMERO (local). Los créditos se borrarán al reiniciar Railway.", file=sys.stderr)
-    conn = sqlite3.connect("bot.db", check_same_thread=False)
-
+# Si no encuentra la variable, el bot se detiene y te muestra el error en los Logs
 if not DATABASE_URL:
-    raise Exception("DATABASE_URL no encontrada")
+    print("❌ ERROR GRAVE: No se encontró la variable DATABASE_URL en Railway.", file=sys.stderr)
+    sys.exit(1)
 
-conn = psycopg2.connect(
-    DATABASE_URL,
-    sslmode="require"
-)
+try:
+    # Conexión directa a PostgreSQL (no necesitas ni sqlite, ni urlparse)
+    conn = psycopg2.connect(DATABASE_URL, sslmode="require")
+    print("✅ [LOG] Conectado exitosamente a PostgreSQL.", file=sys.stderr)
+except Exception as e:
+    print(f"❌ [LOG] ERROR GRAVE conectando a PostgreSQL: {e}", file=sys.stderr)
+    sys.exit(1)
 
-# 🔹 Crear usuario si no existe
-def crear_usuario(user_id):
-    cur = conn.cursor()
-    cur.execute("""
-        INSERT INTO users (user_id, credits)
-        VALUES (%s, 0)
-        ON CONFLICT (user_id) DO NOTHING;
-    """, (user_id,))
-    conn.commit()
-    cur.close()
+cursor = conn.cursor()
 
-# 🔹 Obtener créditos
+# Crear la tabla usando los mismos nombres de tu versión anterior
+cursor.execute("CREATE TABLE IF NOT EXISTS usuarios (user_id BIGINT PRIMARY KEY, creditos INTEGER DEFAULT 0)")
+conn.commit()
+
 def obtener_creditos(user_id):
-    crear_usuario(user_id)
-
-    cur = conn.cursor()
-    cur.execute("SELECT credits FROM users WHERE user_id = %s", (user_id,))
-    data = cur.fetchone()
-    cur.close()
-
-    return data[0] if data else 0
-
-# 🔹 Agregar créditos (RECARGA)
-def agregar_creditos(user_id, amount):
-    crear_usuario(user_id)
-
-    cur = conn.cursor()
-    cur.execute("""
-        UPDATE users
-        SET credits = credits + %s
-        WHERE user_id = %s;
-    """, (amount, user_id))
+    cursor.execute("SELECT creditos FROM usuarios WHERE user_id = %s", (user_id,))
+    fila = cursor.fetchone()
+    if fila:
+        return fila[0]
+    cursor.execute("INSERT INTO usuarios (user_id, creditos) VALUES (%s, 0) ON CONFLICT (user_id) DO NOTHING", (user_id,))
     conn.commit()
-    cur.close()
+    return 0
 
-# 🔹 Descontar crédito (USO)
-def descontar_credito(user_id, amount=1):
-    crear_usuario(user_id)
-
-    cur = conn.cursor()
-    cur.execute("""
-        UPDATE users
-        SET credits = credits - %s
-        WHERE user_id = %s AND credits >= %s;
-    """, (amount, user_id, amount))
+def agregar_creditos(user_id, cantidad):
+    cursor.execute("INSERT INTO usuarios (user_id, creditos) VALUES (%s, 0) ON CONFLICT (user_id) DO NOTHING", (user_id,))
+    cursor.execute("UPDATE usuarios SET creditos = creditos + %s WHERE user_id = %s", (cantidad, user_id))
     conn.commit()
-    cur.close()
+
+def descontar_credito(user_id):
+    cursor.execute("UPDATE usuarios SET creditos = creditos - 1 WHERE user_id = %s AND creditos > 0", (user_id,))
+    conn.commit()
