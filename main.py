@@ -11,7 +11,5 @@ registrar_start(bot)
 registrar_ventas(bot)
 registrar_admin(bot)
 
-print("📡 IP Pública del dispositivo:", requests.get('https://api.ipify.org').text)
-
 print("Bot iniciado...")
 bot.infinity_polling(skip_pending=True)
