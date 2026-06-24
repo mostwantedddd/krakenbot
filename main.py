@@ -2,7 +2,7 @@ import telebot
 from config import TOKEN
 from handlers.start import registrar_start
 from handlers.ventas import registrar_ventas
-from handlers.admins import registrar_admin
+from handlers.admin import registrar_admin
 
 bot = telebot.TeleBot(TOKEN)
 
