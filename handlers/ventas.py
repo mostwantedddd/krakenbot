@@ -150,7 +150,7 @@ def registrar_ventas(bot):
         # -------------------------
         elif estado["estado"] == "monto_recarga":
 
-    try:
+        try:
         monto = float(message.text)
 
         if monto <= 0:
@@ -220,7 +220,7 @@ def registrar_ventas(bot):
         # -------------------------
         elif estado["estado"] == "monto_megacable":
 
-    try:
+        try:
         monto = float(message.text)
 
         if monto <= 0:
