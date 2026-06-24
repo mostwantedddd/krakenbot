@@ -154,8 +154,8 @@ def registrar_ventas(bot):
               monto = float(message.text)
 
               if monto <= 0:
-        bot.send_message(message.chat.id, "❌ Monto inválido")
-                 return
+              bot.send_message(message.chat.id, "❌ Monto inválido")
+              return
 
         estados[message.chat.id]["inicio"] = time.time()
 
