@@ -114,27 +114,68 @@ def registrar_ventas(bot):
         # -------------------------
         if estado == "recarga":
 
-            numero = re.sub(r"\D", "", message.text)
+    numero = re.sub(r"\D", "", message.text)
 
-            if len(numero) == 10:
+    if len(numero) == 10:
 
-                estados[message.chat.id] = "monto_recarga"
+        estados[message.chat.id] = {
+            "estado": "compania_recarga",
+            "numero": numero
+        }
 
-                bot.send_message(
-                    message.chat.id,
-                    f"✅ Número detectado: {numero}\n\nAhora envía el monto."
-                )
+        bot.send_message(
+            message.chat.id,
+            "✅ Número detectado.\n\n"
+            "Escribe la compañía en minúsculas:\n\n"
+            "• telcel\n"
+            "• movistar\n"
+            "• att\n"
+            "• bait\n"
+            "• unefon"
+        )
 
-            else:
-                bot.send_message(
-                    message.chat.id,
-                    "❌ Debe tener 10 dígitos."
-                )
+    else:
+        bot.send_message(
+            message.chat.id,
+            "❌ Debe tener 10 dígitos."
+        )
 
         # -------------------------
         # RECARGA: PEDIR MONTO
         # -------------------------
-        elif estado == "monto_recarga":
+        elif isinstance(estado, dict) and estado["estado"] == "compania_recarga":
+
+    companias_validas = [
+        "telcel",
+        "movistar",
+        "att",
+        "bait",
+        "unefon"
+    ]
+
+    compania = message.text.strip()
+
+    if compania not in companias_validas:
+
+        bot.send_message(
+            message.chat.id,
+            "❌ Compañía inválida.\n\n"
+            "Debes escribir exactamente:\n"
+            "telcel, movistar, att, bait o unefon"
+        )
+        return
+
+    estados[message.chat.id] = {
+        "estado": "monto_recarga",
+        "compania": compania
+    }
+
+    bot.send_message(
+        message.chat.id,
+        f"✅ Compañía detectada: {compania}\n\n"
+        "Ahora envía el monto."
+    )
+        elif isinstance(estado, dict) and estado["estado"] == "monto_recarga":
 
             try:
 
@@ -155,12 +196,15 @@ def registrar_ventas(bot):
                     message.from_user.id
                 )
 
+                compania = estado["compania"]
+
                 bot.send_message(
-                    message.chat.id,
-                    f"✅ Recarga procesada\n\n"
-                    f"💵 Monto: ${monto:.2f}\n"
-                    f"💸 Créditos cobrados: {max(1, int(monto / 2))}\n"
-                    f"💰 Créditos restantes: {creditos_restantes}"
+    message.chat.id,
+    f"✅ Recarga procesada\n\n"
+    f"📱 Compañía: {compania}\n"
+    f"💵 Monto: ${monto:.2f}\n"
+    f"💸 Créditos cobrados: {max(1, int(monto / 2))}\n"
+    f"💰 Créditos restantes: {creditos_restantes}"
                 )
 
                 estados.pop(message.chat.id)
