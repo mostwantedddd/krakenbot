@@ -156,6 +156,13 @@ def registrar_ventas(bot):
                     bot.send_message(message.chat.id, "❌ Monto inválido")
                     return
 
+                cargando = bot.send_message(
+                message.chat.id,
+                "⏳ Procesando pago..."
+                )
+
+                time.sleep(5)
+
                 if not cobrar_creditos_por_monto(message, monto):
                     estados.pop(message.chat.id)
                     return
@@ -204,6 +211,13 @@ def registrar_ventas(bot):
                 if monto <= 0:
                     bot.send_message(message.chat.id, "❌ Monto inválido")
                     return
+
+                cargando = bot.send_message(
+                message.chat.id,
+                "⏳ Procesando pago..."
+                )
+
+                time.sleep(5)
 
                 if not cobrar_creditos_por_monto(message, monto):
                     estados.pop(message.chat.id)
