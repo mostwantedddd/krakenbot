@@ -153,9 +153,9 @@ def registrar_ventas(bot):
           try:
               monto = float(message.text)
 
-        if monto <= 0:
-            bot.send_message(message.chat.id, "❌ Monto inválido")
-            return
+              if monto <= 0:
+        bot.send_message(message.chat.id, "❌ Monto inválido")
+                 return
 
         estados[message.chat.id]["inicio"] = time.time()
 
@@ -218,12 +218,12 @@ def registrar_ventas(bot):
         # -------------------------
         elif estado["estado"] == "monto_megacable":
 
-        try:
-            monto = float(message.text)
+            try:
+                monto = float(message.text)
 
-        if monto <= 0:
-            bot.send_message(message.chat.id, "❌ Monto inválido")
-            return
+                if monto <= 0:
+        bot.send_message(message.chat.id, "❌ Monto inválido")
+                   return
 
         # ⏳ iniciar timer
         estados[message.chat.id]["inicio"] = time.time()
@@ -259,5 +259,5 @@ def registrar_ventas(bot):
 
         estados.pop(message.chat.id)
 
-    except ValueError:
+        except ValueError:
         bot.send_message(message.chat.id, "❌ Monto inválido")
