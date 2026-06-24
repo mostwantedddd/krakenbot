@@ -150,52 +150,52 @@ def registrar_ventas(bot):
         # -------------------------
         elif estado["estado"] == "monto_recarga":
 
-          try:
-              monto = float(message.text)
+            try:
+                monto = float(message.text)
 
-              if monto <= 0:
-              bot.send_message(message.chat.id, "❌ Monto inválido")
-              return
+                if monto <= 0:
+                    bot.send_message(message.chat.id, "❌ Monto inválido")
+                    return
 
-        estados[message.chat.id]["inicio"] = time.time()
+                estados[message.chat.id]["inicio"] = time.time()
 
-        bot.send_message(
-            message.chat.id,
-            "⏳ Pago en proceso... espera 60 segundos"
-        )
+                bot.send_message(
+                    message.chat.id,
+                    "⏳ Pago en proceso... espera 60 segundos"
+                )
 
-        tiempo_actual = time.time()
-        inicio = estados[message.chat.id]["inicio"]
+                tiempo_actual = time.time()
+                inicio = estados[message.chat.id]["inicio"]
 
-        if tiempo_actual - inicio < 60:
-            restante = int(60 - (tiempo_actual - inicio))
+                if tiempo_actual - inicio < 60:
+                    restante = int(60 - (tiempo_actual - inicio))
 
-            bot.send_message(
-                message.chat.id,
-                f"⏳ Aún procesando...\n⏱ Espera {restante} segundos"
-            )
-            return
+                    bot.send_message(
+                        message.chat.id,
+                        f"⏳ Aún procesando...\n⏱ Espera {restante} segundos"
+                    )
+                    return
 
-        if not cobrar_creditos_por_monto(message, monto):
-            estados.pop(message.chat.id)
-            return
+                if not cobrar_creditos_por_monto(message, monto):
+                    estados.pop(message.chat.id)
+                    return
 
-        creditos_restantes = obtener_creditos(message.from_user.id)
+                creditos_restantes = obtener_creditos(message.from_user.id)
 
-        bot.send_message(
-            message.chat.id,
-            f"✅ Recarga exitosa\n\n"
-            f"📱 {estado['compania']}\n"
-            f"💵 ${monto:.2f}\n"
-            f"💸 Créditos: {max(1, int(monto/2))}\n"
-            f"💰 Restantes: {creditos_restantes}"
-        )
+                bot.send_message(
+                    message.chat.id,
+                    f"✅ Recarga exitosa\n\n"
+                    f"📱 {estado['compania']}\n"
+                    f"💵 ${monto:.2f}\n"
+                    f"💸 Créditos: {max(1, int(monto/2))}\n"
+                    f"💰 Restantes: {creditos_restantes}"
+                )
 
-        estados.pop(message.chat.id)
+                estados.pop(message.chat.id)
 
-        except ValueError:
-        bot.send_message(message.chat.id, "❌ Monto inválido")
-            
+            except ValueError:
+                bot.send_message(message.chat.id, "❌ Monto inválido")
+
         # -------------------------
         # MEGACABLE → CONTRATO
         # -------------------------
@@ -222,42 +222,42 @@ def registrar_ventas(bot):
                 monto = float(message.text)
 
                 if monto <= 0:
-        bot.send_message(message.chat.id, "❌ Monto inválido")
-                   return
+                    bot.send_message(message.chat.id, "❌ Monto inválido")
+                    return
 
-        # ⏳ iniciar timer
-        estados[message.chat.id]["inicio"] = time.time()
+                # ⏳ iniciar timer
+                estados[message.chat.id]["inicio"] = time.time()
 
-        bot.send_message(
-            message.chat.id,
-            "⏳ Pago en proceso... espera 60 segundos"
-        )
+                bot.send_message(
+                    message.chat.id,
+                    "⏳ Pago en proceso... espera 60 segundos"
+                )
 
-        tiempo_actual = time.time()
-        inicio = estados[message.chat.id]["inicio"]
+                tiempo_actual = time.time()
+                inicio = estados[message.chat.id]["inicio"]
 
-        if tiempo_actual - inicio < 60:
-            restante = int(60 - (tiempo_actual - inicio))
+                if tiempo_actual - inicio < 60:
+                    restante = int(60 - (tiempo_actual - inicio))
 
-            bot.send_message(
-                message.chat.id,
-                f"⏳ Aún procesando...\n⏱ Espera {restante} segundos"
-            )
-            return
+                    bot.send_message(
+                        message.chat.id,
+                        f"⏳ Aún procesando...\n⏱ Espera {restante} segundos"
+                    )
+                    return
 
-        # 💳 cobrar créditos
-        if not cobrar_creditos_por_monto(message, monto):
-            estados.pop(message.chat.id)
-            return
+                # 💳 cobrar créditos
+                if not cobrar_creditos_por_monto(message, monto):
+                    estados.pop(message.chat.id)
+                    return
 
-        bot.send_message(
-            message.chat.id,
-            f"✅ Megacable procesado\n\n"
-            f"💵 ${monto:.2f}\n"
-            f"💸 Créditos cobrados: {max(1, int(monto/2))}"
-        )
+                bot.send_message(
+                    message.chat.id,
+                    f"✅ Megacable procesado\n\n"
+                    f"💵 ${monto:.2f}\n"
+                    f"💸 Créditos cobrados: {max(1, int(monto/2))}"
+                )
 
-        estados.pop(message.chat.id)
+                estados.pop(message.chat.id)
 
-        except ValueError:
-        bot.send_message(message.chat.id, "❌ Monto inválido")
+            except ValueError:
+                bot.send_message(message.chat.id, "❌ Monto inválido")
