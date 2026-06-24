@@ -6,6 +6,8 @@ from handlers.admins import registrar_admin
 
 bot = telebot.TeleBot(TOKEN)
 
+bot.remove_webhook()
+
 # COMANDO DE PRUEBA PARA SABER SI EL BOT ESTÁ VIVO
 @bot.message_handler(commands=['test'])
 def test_command(message):
