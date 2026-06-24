@@ -3,6 +3,17 @@ import psycopg2
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+if DATABASE_URL:
+  print("✅ [LOG] Conectado exitosamente a PostgreSQL.", file=sys.stderr)
+    except Exception as e:
+        print(f"❌ [LOG] ERROR GRAVE conectando a PostgreSQL: {e}", file=sys.stderr)
+        # Forzamos el cierre para que veas el error en rojo en los logs
+        sys.exit(1)
+else:
+    # Si no encuentra DATABASE_URL, usa SQLite (Esto es el enemigo de los créditos)
+    print("⚠️ [LOG] ATENCIÓN: Usando SQLite EFÍMERO (local). Los créditos se borrarán al reiniciar Railway.", file=sys.stderr)
+    conn = sqlite3.connect("bot.db", check_same_thread=False)
+
 if not DATABASE_URL:
     raise Exception("DATABASE_URL no encontrada")
 
