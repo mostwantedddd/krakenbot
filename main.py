@@ -54,12 +54,12 @@ print("✅ Módulos cargados correctamente")
 if __name__ == "__main__":
     print("🤖 Bot iniciado y escuchando mensajes...")
 
-    try:
-        bot.infinity_polling(
-            skip_pending=True,
-            timeout=10,
-            long_polling_timeout=10
-        )
-
-    except Exception as e:
-        print(f"❌ ERROR FATAL: {e}")
+    while True:
+        try:
+            print("🤖 Bot iniciado y escuchando mensajes...")
+            # infinity_polling maneja mejor los errores de conexión que polling normal
+            bot.infinity_polling(skip_pending=True)
+        except Exception as e:
+            print(f"❌ Error capturado: {e}")
+            print("🔄 Reintentando conectar en 5 segundos...")
+            time.sleep(5)
