@@ -1,5 +1,5 @@
 import re
-from database import obtener_creditos, descontar_credito
+from database import obtener_creditos, descontar_creditos
 
 def registrar_ventas(bot):
 
