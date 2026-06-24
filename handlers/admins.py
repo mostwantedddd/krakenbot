@@ -1,3 +1,4 @@
+print("✅ admin cargado")
 from database import agregar_creditos
 
 ADMIN_ID = 8954020327  # Tu ID
