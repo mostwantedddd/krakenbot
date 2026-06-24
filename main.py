@@ -8,6 +8,11 @@ bot = telebot.TeleBot(TOKEN)
 
 bot.remove_webhook()
 
+# ESTE COMANDO TE DIRÁ TU ID REAL EN TELEGRAM
+@bot.message_handler(commands=['miid'])
+def mostrar_mi_id(message):
+    bot.send_message(message.chat.id, f"🆔 Tu ID de Telegram es: `{message.from_user.id}`", parse_mode="Markdown")
+
 # COMANDO DE PRUEBA PARA SABER SI EL BOT ESTÁ VIVO
 @bot.message_handler(commands=['test'])
 def test_command(message):
