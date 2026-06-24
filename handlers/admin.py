@@ -1,4 +1,4 @@
-from credits import agregar_creditos
+from database import agregar_creditos
 
 ADMIN_ID = 8954020327
 
@@ -29,5 +29,5 @@ def registrar_admin(bot):
             )
 
         except Exception as e:
-            print("ERROR:", e)
+            print("ERROR ADMIN:", e)
             bot.send_message(message.chat.id, "❌ Error interno")
