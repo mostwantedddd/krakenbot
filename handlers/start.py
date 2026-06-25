@@ -5,15 +5,14 @@ from database import obtener_creditos
 user_deposit_state = {}
 
 # ⚠️ CAMBIA ESTO POR TU ID DE TELEGRAM (El ID del administrador)
-ADMIN_CHAT_ID = 8954020327
+ADMIN_CHAT_ID = 8954020327, 8010899471
 
 def registrar_start(bot):
     # Datos bancarios
-    CLABE = "042180010074584080"
-    BANCO = "MIFEL"
-    TITULAR = "Emiliano Rayon"
-    BINANCE_ID = "1141542576"
-    CONVERSION = "1 USDT = 17MXN"
+    CLABE = "646180401609592944"
+    BANCO = "OpenBank"
+    TITULAR = "Josue Daniel Torres Cortes"
+    CONVERSION = "1 Peso 1 Crédito"
 
     @bot.message_handler(commands=['start'])
     def start(message):
@@ -37,7 +36,7 @@ def registrar_start(bot):
             creditos = obtener_creditos(message.from_user.id)
             bot.send_message(
                 message.chat.id,
-                f"💰 Tus créditos disponibles: {creditos}\n\nCada servicio consume 1 crédito."
+                f"💰 Tus créditos disponibles: {creditos}\n"
             )
         except Exception as e:
             print("ERROR START:", e)
@@ -49,9 +48,9 @@ def registrar_start(bot):
     @bot.message_handler(func=lambda m: m.text == "💳 Depositar")
     def menu_deposito(message):
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        markup.row("💵 Depositar $30", "💵 Depositar $60")
-        markup.row("💵 Depositar $120", "💵 Depositar $240")
-        markup.row("💵 Depositar $600")
+        markup.row("💵 Depositar $100", "💵 Depositar $150")
+        markup.row("💵 Depositar $200", "💵 Depositar $500")
+        markup.row("💵 Depositar $1000")
         markup.row("🔙 Volver")
 
         bot.send_message(
@@ -79,7 +78,6 @@ def registrar_start(bot):
             f"💳 Deposita a la siguiente CLABE:\n{CLABE}\n\n"
             f"Banco: {BANCO}\n"
             f"A nombre de: {TITULAR}\n\n"
-            f"Binance: {BINANCE_ID}\n"
             f"CONVERSION {CONVERSION}\n\n"
             "Cuando termines, presiona el botón para enviar tu comprobante."
         )
