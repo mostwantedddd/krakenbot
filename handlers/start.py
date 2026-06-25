@@ -75,9 +75,9 @@ def registrar_start(bot):
 
         texto = (
             f"✅ Monto seleccionado: ${monto}\n\n"
-            f"💳 Deposita a la siguiente CLABE:\n{CLABE}\n\n"
-            f"Banco: {BANCO}\n"
-            f"A nombre de: {TITULAR}\n\n"
+            f"💳 Deposita a la siguiente CLABE:\n`{CLABE}`\n\n"
+            f"Banco: **{BANCO}**\n"
+            f"A nombre de: `{TITULAR}`\n\n"
             f"CONVERSION {CONVERSION}\n\n"
             "Cuando termines, presiona el botón para enviar tu comprobante."
         )
